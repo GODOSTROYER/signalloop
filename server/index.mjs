@@ -9,6 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { Store } from './db.mjs';
 import { seed } from './seed.mjs';
 import { Workers, probe, run } from './media.mjs';
+import { createLabRoutes } from './lab.mjs';
+import { inspectMeaning } from './editorial.mjs';
 import { rewriteCopy } from './ai.mjs';
 import { assert, id, platforms, parseTranscript, validateSegments, candidates, rankClips, draftCopy, inferRules, validateFeedback, captions, calendarICS } from './domain.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
@@ -30,6 +32,7 @@ export function createApp({dataDir=process.env.DATA_DIR||join(root,'.signalloop'
  const get=(kind,key)=>{const x=store.get(kind,key);assert(x,`${kind} item not found.`,404);return x;};
  const rulesFor=p=>store.all('rules').filter(r=>r.brandId===p.brandId); // a creator brand spans sources; demo is isolated
  const clipsFor=p=>store.all('clips').filter(c=>c.projectId===p.id);
+ const labRoutes=createLabRoutes({store,json,body});
  const server=http.createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Frame-Options','DENY');
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
@@ -45,6 +48,7 @@ export function createApp({dataDir=process.env.DATA_DIR||join(root,'.signalloop'
     const sid=randomBytes(32).toString('hex');sessions.set(sid,Date.now()+12*3600000);res.setHeader('Set-Cookie',`sl_session=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${process.env.COOKIE_SECURE==='1'?'; Secure':''}`);return json(res,{ok:true});
    }
    if(path.startsWith('/api/')&&accessToken){const sid=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('sl_session='))?.slice(11);assert(sessions.get(sid)>Date.now(),'Unlock this workspace with its access token.',401);}
+   if(await labRoutes(req,res,url))return;
    if(path==='/api/state'&&method==='GET'){
     const projects=store.all('projects').map(p=>({...p,media:p.media?{...p.media,file:undefined,url:`/api/media/${p.id}`} : null}));
     const projectId=url.searchParams.get('project')||projects[0]?.id,project=get('projects',projectId),platform=url.searchParams.get('platform')||'instagram';assert(platforms.includes(platform),'Unknown platform.');
@@ -75,11 +79,11 @@ export function createApp({dataDir=process.env.DATA_DIR||join(root,'.signalloop'
    const clipMatch=/^\/api\/clips\/([\w-]+)\/(draft|edit|captions|render)$/.exec(path);
    if(clipMatch){const c=get('clips',clipMatch[1]),p=get('projects',c.projectId),action=clipMatch[2];
     if(action==='captions'&&method==='GET'){const format=url.searchParams.get('format')==='vtt'?'vtt':'srt';assert(p.timing!=='estimated','Attach a timed transcript before exporting captions.');res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Content-Disposition':`attachment; filename="clip-${c.id}.${format}"`});return res.end(captions(p,c,format));}
-    if(action==='draft'&&method==='POST'){const b=await body(req);assert(platforms.includes(b.platform),'Unknown platform.');const rules=rulesFor(p);const draft=b.ai===true?await rewriteCopy(c,b.platform,rules,store.all('edits').filter(e=>e.brandId===p.brandId)):draftCopy(c,b.platform,rules);const latest=get('clips',c.id);const previous=latest.copy[b.platform];latest.copy[b.platform]={...draft,revision:(previous?.revision||0)+1,memoryVersion:rules.filter(r=>r.active).length,updatedAt:now()};store.put('clips',latest);store.log('copy.generated',{projectId:p.id,clipId:c.id,platform:b.platform,engine:draft.engine});return json(res,latest.copy[b.platform]);}
+    if(action==='draft'&&method==='POST'){const b=await body(req);assert(platforms.includes(b.platform),'Unknown platform.');const rules=rulesFor(p);const draft=b.ai===true?await rewriteCopy(c,b.platform,rules,store.all('edits').filter(e=>e.brandId===p.brandId)):draftCopy(c,b.platform,rules);draft.integrity=inspectMeaning(p,c,draft.text);const latest=get('clips',c.id);const previous=latest.copy[b.platform];latest.copy[b.platform]={...draft,revision:(previous?.revision||0)+1,memoryVersion:rules.filter(r=>r.active).length,updatedAt:now()};store.put('clips',latest);store.log('copy.generated',{projectId:p.id,clipId:c.id,platform:b.platform,engine:draft.engine});return json(res,latest.copy[b.platform]);}
     if(action==='edit'&&method==='POST'){
      const b=await body(req);assert(platforms.includes(b.platform),'Unknown platform.');assert(typeof b.text==='string'&&b.text.trim().length>0&&b.text.length<=6000,'Copy must be 1–6,000 characters.');const previous=c.copy[b.platform];assert(previous,'Generate a draft before editing.');assert(b.revision===previous.revision,'This copy changed in another tab. Reload before saving.',409);assert(previous.text!==b.text,'No changes to learn from.');
      const edit={id:id(),projectId:p.id,clipId:c.id,brandId:p.brandId,platform:b.platform,before:previous.text,after:b.text,createdAt:now()};const rules=inferRules(edit.before,edit.after,b.platform,edit.id).map(r=>({...r,projectId:p.id,brandId:p.brandId}));
-     store.transaction(()=>{store.put('edits',edit);const existing=rulesFor(p);for(const r of rules)if(!existing.some(e=>e.kind===r.kind&&e.platform===r.platform&&JSON.stringify(e.value)===JSON.stringify(r.value)))store.put('rules',r);c.copy[b.platform]={...previous,text:b.text,revision:previous.revision+1,engine:'creator-edited',updatedAt:now()};store.put('clips',c);store.log('memory.edit-recorded',{projectId:p.id,clipId:c.id,editId:edit.id,proposals:rules.length});});return json(res,{edit,rules});
+     store.transaction(()=>{store.put('edits',edit);const existing=rulesFor(p);for(const r of rules)if(!existing.some(e=>e.kind===r.kind&&e.platform===r.platform&&JSON.stringify(e.value)===JSON.stringify(r.value)))store.put('rules',r);c.copy[b.platform]={...previous,text:b.text,revision:previous.revision+1,engine:'creator-edited',integrity:inspectMeaning(p,c,b.text),updatedAt:now()};store.put('clips',c);store.log('memory.edit-recorded',{projectId:p.id,clipId:c.id,editId:edit.id,proposals:rules.length});});return json(res,{edit,rules});
     }
     if(action==='render'&&method==='POST')return json(res,workers.render(p,c,await body(req)),202);
    }
@@ -96,7 +100,7 @@ export function createApp({dataDir=process.env.DATA_DIR||join(root,'.signalloop'
    }
    if(path==='/api/feedback/demo'&&method==='DELETE'){const b=await body(req),p=get('projects',b.projectId);assert(p.sample,'Not a demo workspace.');for(const r of store.all('feedback').filter(r=>r.projectId===p.id&&r.sample))store.delete('feedback',r.id);return json(res,{ok:true});}
    if(path==='/api/calendar'&&method==='POST'){
-    const b=await body(req),c=get('clips',b.clipId);assert(platforms.includes(b.platform),'Unknown platform.');assert(c.copy[b.platform],'Draft platform copy before scheduling.');assert(Number.isFinite(Date.parse(b.when))&&Date.parse(b.when)>Date.now(),'Choose a future publication time.');assert(!store.all('calendar').some(x=>x.clipId===c.id&&x.platform===b.platform&&x.when===new Date(b.when).toISOString()),'This reminder already exists.',409);
+    const b=await body(req),c=get('clips',b.clipId);assert(platforms.includes(b.platform),'Unknown platform.');assert(c.copy[b.platform],'Draft platform copy before scheduling.');assert(inspectMeaning(get('projects',c.projectId),c,c.copy[b.platform].text).status!=='blocked','Source guard blocked this draft. Remove unsupported numbers or certainty before scheduling.',409);assert(Number.isFinite(Date.parse(b.when))&&Date.parse(b.when)>Date.now(),'Choose a future publication time.');assert(!store.all('calendar').some(x=>x.clipId===c.id&&x.platform===b.platform&&x.when===new Date(b.when).toISOString()),'This reminder already exists.',409);
     const item={id:id(),projectId:c.projectId,clipId:c.id,platform:b.platform,when:new Date(b.when).toISOString(),status:'planned',copySnapshot:c.copy[b.platform].text,createdAt:now()};store.put('calendar',item);store.log('calendar.planned',{projectId:c.projectId,clipId:c.id});return json(res,item,201);
    }
    const calMatch=/^\/api\/calendar\/([\w-]+)$/.exec(path);if(calMatch&&method==='DELETE'){get('calendar',calMatch[1]);store.delete('calendar',calMatch[1]);return json(res,{ok:true});}
@@ -106,7 +110,7 @@ export function createApp({dataDir=process.env.DATA_DIR||join(root,'.signalloop'
    const exportMatch=/^\/api\/exports\/([\w-]+)$/.exec(path);if(exportMatch&&['GET','HEAD'].includes(method)){const job=get('jobs',exportMatch[1]);assert(job.type==='render'&&job.status==='completed','Export is not ready.',409);return await sendFile(req,res,join(store.dir,job.result.file),'video/mp4',`signalloop-${job.id}.mp4`);}
    if(path.startsWith('/api/'))assert(false,'API endpoint not found.',404);
    assert(['GET','HEAD'].includes(method),'Method not allowed.',405);
-   const assets={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/views.js':'views.js','/ui.js':'ui.js','/styles.css':'styles.css','/mark.svg':'mark.svg'};
+   const assets={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/views.js':'views.js','/ui.js':'ui.js','/styles.css':'styles.css','/mark.svg':'mark.svg','/lab.js':'lab.js','/lab.css':'lab.css'};
    assert(assets[path],'Page not found.',404);return await sendFile(req,res,join(root,'public',assets[path]));
   }catch(e){if(res.headersSent){res.destroy();return;}json(res,{error:e.status?e.message:'The operation failed. Check server configuration and media tools.'},e.status||500);if(!e.status)console.error(e.message);}
  });

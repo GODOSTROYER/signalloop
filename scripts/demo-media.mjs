@@ -20,7 +20,7 @@ try {
  const meta=await probe(join(store.dir,file));
  const p={...store.get('projects','demo'),brandId:'demo-brand',source:'Original synthetic speech generated with eSpeak',segments,duration:meta.duration,timing:'provided',media:{file,...meta},status:'ready'};
  store.transaction(()=>{
-  for(const kind of ['clips','feedback','calendar','edits','rules','jobs'])for(const item of store.all(kind).filter(x=>x.projectId==='demo'))store.delete(kind,item.id);
+  for(const kind of ['clips','feedback','calendar','edits','rules','jobs','campaigns'])for(const item of store.all(kind).filter(x=>x.projectId==='demo'))store.delete(kind,item.id);
   store.put('projects',p);for(const c of candidates(p))store.put('clips',c);store.log('demo.media-generated',{projectId:'demo',sample:true});
  });
  console.log(`Generated ${Math.round(meta.duration)} seconds of synthetic podcast audio. Reload the studio.`);

@@ -8,6 +8,19 @@ The interesting part is the loop, not another clipping button:
 
 **Source → explained moments → platform copy → creator edits → approved brand rules → outcome evidence → a different next recommendation.**
 
+## v0.2: learning you can inspect
+
+- **Learning lab:** compare the same source with and without approved memory. The aggregate excludes edited clips and reports measured rule violations, not fabricated audience lift.
+- **Source guard:** surrounding transcript context, unsupported-number/certainty blocks and missing-qualification warnings. A lexical risk screen, not a complete fact checker.
+- **Campaign planner:** goal-aware, non-overlapping selections with platform copy, source evidence, a decision trail, review gates and idempotent calendar planning.
+- **Optional semantic review:** Gemini can select from the actual shortlist. Unknown clip IDs, duplicated selections and invented evidence quotes are rejected server-side.
+- **Better long-source coverage:** scan the entire episode, preserve chronological coverage, then cap the shortlist at 80.
+- **Safer memory:** arbitrary fact-changing replacements do not become reusable rules; legacy unsafe replacements are ignored. Length preferences preserve complete sentences.
+- **Better output:** audio-only sources export branded waveform MP4s. Short readable caption phrases preserve the source wording, with timing interpolated within source segments.
+- **CSV metrics and demo readiness:** real-result imports and an artifact-based submission checklist.
+
+See [submission checklist](docs/SUBMISSION.md) and [three-minute walkthrough](docs/DEMO.md).
+
 ## Run it
 
 Requires **Node.js 22.16+** (Node 24 recommended). The web app has **zero npm dependencies** and no frontend build step.
@@ -30,7 +43,7 @@ Install FFmpeg/ffprobe for upload validation and MP4 export. Optional eSpeak cre
 brew install ffmpeg espeak
 
 # Ubuntu/Debian
-sudo apt-get update && sudo apt-get install -y ffmpeg espeak
+sudo apt-get update && sudo apt-get install -y ffmpeg espeak fonts-dejavu-core
 
 # Generate playable original synthetic speech and accurate segment times.
 # Run before starting the server. This resets only the demo brand.
@@ -58,19 +71,21 @@ Plain text is supported for transcript exploration but is marked **estimated** a
 | Platform captions and copy | Instagram, YouTube and LinkedIn drafts; approved style rules; SRT/VTT downloads; real MP4 export in 9:16, 1:1 or 16:9 with optional burned captions. |
 | Brand memory from edits | Persistent before/after pairs, conservative rule proposals, approval/disable controls, optimistic edit revisions, cross-source memory within the real creator brand. |
 | Content calendar | Future editorial reminders, immutable copy snapshots and ICS export. Display timezone is Asia/Kolkata; storage is UTC. |
-| Performance feedback | Validated JSON imports, stable post-ID upserts, platform-specific conservative reranking, a separate labeled synthetic sandbox and visible score deltas. |
+| Performance feedback | Validated JSON/CSV imports, stable post-ID upserts, platform-specific conservative reranking, a separate labeled synthetic sandbox and visible score deltas. |
 
-**Important boundaries:** clip scoring is currently a transparent heuristic, not a trained virality predictor. Offline copy is extractive/template-based, not secretly an LLM. The calendar does not auto-publish. Analytics are imported, not fetched from social networks. Reframing is fit-and-pad, not face tracking. There is one real creator brand plus an isolated demo brand, not a multi-tenant account system. Caption timing is segment-level, not word-level karaoke alignment.
+**Important boundaries:** clip scoring is currently a transparent heuristic, not a trained virality predictor. Offline copy is extractive/template-based, not secretly an LLM. The calendar does not auto-publish. Analytics are imported, not fetched from social networks. Reframing is fit-and-pad, not face tracking. There is one real creator brand plus an isolated demo brand, not a multi-tenant account system. Original SRT/VTT downloads retain source segment timing; burned phrases interpolate within those segments. Neither is forced word alignment.
 
-## Optional AI copy
+## Optional AI copy and semantic curation
 
-Copy `.env.example` to `.env`, configure `GEMINI_API_KEY` and a model available to your project in `GEMINI_MODEL`, and restart. The documented default at implementation was `gemini-3.6-flash`; verify model availability for your account.
+Copy `.env.example` to `.env`, configure `GEMINI_API_KEY` and a model available to your project in `GEMINI_MODEL`, and restart. Choose a model currently available to your Google project; live model availability was not verified in this environment.
 
 The **AI rewrite** action asks before sending the selected transcript, approved rules and up to three relevant edit pairs to Google. Requests use structured JSON output, timeouts and server-side credentials. The app validates the response and reapplies explicit style rules. Human fact review is still required. No key is bundled, logged or exposed in the browser.
 
 The adapter follows Google's official REST documentation:
 - https://ai.google.dev/api/generate-content
 - https://ai.google.dev/gemini-api/docs/structured-output
+
+Campaign planning also offers a consent-gated semantic review of up to 32 candidates spread across the episode. Evidence quotes must be literal source substrings, and all clip IDs are checked. The planner remains a hybrid of model suggestions and deterministic constraints.
 
 A live provider call was **not verified** in the build environment because no provider credential was supplied.
 
@@ -106,7 +121,9 @@ npm test
 
 Tests cover transcript validation, selection provenance, memory approval and reuse, stale-edit rejection, cohort separation, idempotent metrics, reranking, calendar export, authentication and origin/Host checks, plus real upload → FFmpeg → captioned MP4 → range download. The media integration test explicitly skips when FFmpeg is absent; the implementation environment ran it successfully.
 
-Browser note: direct Chromium navigation to localhost was blocked by the execution environment (`ERR_BLOCKED_BY_ADMINISTRATOR`). Desktop/mobile views were rendered offline using the actual view modules and API state. Do not confuse that with a completed live browser end-to-end run. AI rewriting and local Whisper still require live verification.
+A real browser smoke workflow is included in GitHub Actions: it exercises edit → approve → memory proof → campaign → review → calendar → source guard → feedback → actual MP4 → mobile, and uploads screenshots. Inspect the actual workflow result for verification. Run it locally with `pip install playwright==1.57.0`, `python -m playwright install chromium`, and `python scripts/browser-smoke.py`. Its data is isolated from your own workspace.
+
+Build-environment browser note: direct Chromium navigation to localhost was blocked by the execution environment (`ERR_BLOCKED_BY_ADMINISTRATOR`). Desktop/mobile views were rendered offline using the actual view modules and API state. Do not confuse that with a completed live browser end-to-end run. AI rewriting and local Whisper still require live verification.
 
 ## Architecture and persistence
 
@@ -115,7 +132,9 @@ Browser note: direct Chromium navigation to localhost was blocked by the executi
 - `server/index.mjs`: HTTP API, validation, streaming uploads, sessions and static serving.
 - `server/db.mjs`: SQLite WAL storage and atomic transactions using Node's built-in `node:sqlite`.
 - `server/media.mjs`: bounded serial media job queue; FFmpeg and local ASR subprocesses, without shell interpolation.
-- `server/ai.mjs`: optional structured-output copy adapter.
+- `server/ai.mjs`: optional structured-output copy and source-grounded editorial review.
+- `server/editorial.mjs`, `server/lab.mjs`: source guards, memory evaluation, campaign selection and approval routes.
+- `server/caption-layout.mjs`: source-preserving phrase captions and title wrapping.
 - `.signalloop/`: local SQLite database, uploads and exports, excluded from Git.
 
 Native SQLite may emit an experimental warning on Node 22. The prototype uses APIs available in 22.16. See https://nodejs.org/api/sqlite.html.
@@ -138,8 +157,8 @@ This is still a single-user prototype: add real identity, resource quotas, worke
 
 ## Next implementation priorities
 
-1. Verify ASR and the AI adapter against actual credentials/media, then add source-grounded LLM clip curation and multilingual evaluation.
-2. Add editable segment boundaries, caption layouts and face-aware reframing with human review.
+1. Verify ASR and the AI adapter against actual credentials/media, then evaluate semantic curation on real creator recordings and multilingual material.
+2. Add editable segment boundaries, forced word alignment and face-aware reframing with human review.
 3. Connect platform OAuth, analytics ingestion and publishing, respecting each platform's capabilities and approvals.
 4. Replace heuristic performance updates with evaluated creator-specific models when enough comparable observations exist.
 

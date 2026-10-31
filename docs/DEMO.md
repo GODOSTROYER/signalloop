@@ -1,48 +1,45 @@
-# Three-minute judge demo
+# Three-minute judge demo, v0.2
 
-## Preparation
+## Prepare
 
-Install Node 22.16+, FFmpeg and eSpeak. Run `npm run demo:media` before starting the server; this resets demo records only. Start with `npm start`. Use a permitted real podcast for your final submission when possible. Keep a backup MP4 export ready, but show the real application first. Never call synthetic feedback actual audience performance.
+Run `npm run demo:media` before starting the app to generate explicitly labeled synthetic podcast audio. This resets the demo brand only, including its previous campaigns. For the final presentation, prefer your own permitted conversation. Have one actual MP4 export ready. Do not claim that sample analytics came from a social account.
 
-## 0:00–0:25: the problem
+## 0:00–0:25: source and problem
 
-“Most repurposing tools forget what happened after you pressed generate. SignalLoop remembers how you edited the content and uses measured results to change the next recommendation.”
+"The expensive part of repurposing is not generating another clip. It is correcting the same voice mistakes and checking that the edit did not change the meaning. SignalLoop makes those decisions reusable and visible."
 
-Open the source. Play the original synthetic podcast, explaining that it is a reproducible demo fixture. Show clip timestamps and the original quotation.
+Play the source. Show its timestamp and exact quote. Briefly explain that offline selection uses an inspectable rubric, not a virality probability.
 
-## 0:25–0:55: editorial judgment, with evidence
+## 0:25–1:05: show learning, not a claim of learning
 
-Select a candidate. Explain the visible hook, payoff, coherence and duration rubric. Show the context warning. State that this is an editorial score, not a probability of going viral.
+In Instagram copy, remove the hashtag and save. Open Brand memory and approve the preference. Open **Learning lab → Memory proof** and choose another moment. Show the highlighted draft difference. The aggregate test excludes moments that supplied edits. Switch to YouTube and show that its copy did not inherit an Instagram-only rule.
 
-Switch between Instagram and LinkedIn: the idea stays grounded in the source; the framing changes. The offline prototype uses templates. Use AI rewrite only when the configured provider has been verified.
+"Here is the edit that taught it. Here is its scope. Here is where it changed a draft it had not been taught on. We can switch it off."
 
-## 0:55–1:40: the learning moment
+## 1:05–1:35: protect meaning
 
-Generate Instagram copy. Delete its hashtag and save. Open Brand memory. Show the actual before/after edit and proposed rule. Approve “Leave hashtags out of this platform’s copy.”
+Open **Source guard**. Show the context before and after the selected cut. Use **Check a draft** to introduce an obviously fabricated number, for example "We gained 99999 subscribers. Guaranteed." Show the unsupported-number and certainty flags.
 
-Switch to another moment. Regenerate Instagram copy. Show that the hashtag is gone. Switch to YouTube and show that its unrelated platform rule was not changed. Turn the rule off to demonstrate reversibility.
+"This is a source-linked risk screen, not a claim that a language model can establish truth. It catches these explicit mistakes and asks for review of missing qualifications."
 
-“The point is not remembering a paragraph. It is remembering a specific editorial decision, with evidence, scope and an off switch.”
+## 1:35–2:20: make a campaign, not a pile of clips
 
-## 1:40–2:15: outcome evidence changes the shortlist
+Open **Campaign planner**, choose a goal and build three moments. Expand the real pipeline trace and one draft. Show source evidence and why another moment was excluded. Approve one reviewed draft; plan approved posts. The calendar receives only the approved item.
 
-Open Performance. State explicitly: “These are synthetic test observations, isolated from real creator data.” Load the illustrative results. Show the before-content score, the feedback adjustment, and the changed shortlist order. Open the studio to show the same ranking changed there.
+Use Gemini semantic review only after running a successful real provider check. Local mode is intentionally labeled and works without credentials.
 
-“Real creators can import observed post metrics. We compare within a platform, shrink small samples toward a prior, and cap the adjustment. This is association, not proof of causality.”
+## 2:20–3:00: the second learning signal and real output
 
-## 2:15–2:45: real output
+Open Performance. Say "These are synthetic observations used to demonstrate the mechanism" before loading illustrative results, unless you have your own real import. Show the ranking change and the fixed upper bound on the feedback adjustment. Play the completed portrait waveform MP4 with readable captions.
 
-Plan the selected post. Show the editorial calendar and ICS export. Queue a 9:16 MP4 with captions. Show an actual completed render and downloaded file. Mention that this prototype preserves the source frame with fit-and-pad; it does not claim face tracking.
+"Your edits teach the voice. The source constrains the meaning. Measured outcomes nudge what comes next. You stay in control of all three."
 
-## 2:45–3:00: close
+## Answers to likely questions
 
-“Clips are easy to generate. Editorial taste is harder to retain. SignalLoop turns every correction and every measured outcome into a better starting point for the next piece of content.”
-
-## Honest answers
-
-- Is it fine-tuning? No. Explicit rule learning, stored edit examples, and optional retrieval into the AI copy prompt.
-- Is it a multi-agent system? No. Modular deterministic services and one optional model call are sufficient for this prototype. Do not imply unbuilt agent infrastructure.
-- Does it publish? No. Planning and export are real; social publishing is a future OAuth integration.
-- Does it fetch live analytics? No. Import and reranking are real; platform ingestion is not connected.
-- Is ranking proven to improve performance? No. The algorithm demonstrably changes suggestions, but actual content lift needs controlled evaluation.
-- What is novel here? Inspectable, reversible memory plus a separate, conservative evidence loop. Do not claim competitors have none of these features without current comparative research.
+- **Fine-tuning?** No. Reviewed rules, saved edit examples, optional retrieval for AI rewriting, and explicit comparison of generated drafts with and without rules.
+- **Autonomy?** The planner chains source selection, diversity constraints, scoped memory, source checks and campaign creation. Publishing and scheduling remain approval-gated. Do not describe deterministic modules as independent LLM agents.
+- **Learning evidence?** Actual software behavior and held-out rule adherence. No causal audience-lift claim.
+- **Why no auto-publish?** Avoids accidental publication and platform onboarding risk during the prototype. Real calendar and media export are implemented.
+- **Transcript accuracy?** Imported timings or optional local ASR; caption phrases use proportional timing, not word-level forced alignment.
+- **Novelty?** The combination of inspectable memory proof, source guard and a reviewable campaign. No unverified claim that competitors lack memory or analytics.
+- **What did the team build?** Disclose AI assistance and describe only actual human product, testing, integration and presentation work.

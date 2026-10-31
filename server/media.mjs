@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readableCaptions, wrapTitle } from './caption-layout.mjs';
 import { assert, captions, id, validateSegments, candidates } from './domain.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
 export function run(command,args,{timeout=120000,maxOutput=2_000_000,cwd}={}){
@@ -56,18 +57,28 @@ export class Workers{
   return this.enqueue('render',project.id,async job=>{
    const dir=join(this.store.dir,'exports');await mkdir(dir,{recursive:true});
    const sub=`${job.id}.srt`,output=`${job.id}.mp4`;
-   await writeFile(join(dir,sub),captions(project,clip));
+   await writeFile(join(dir,sub),readableCaptions(project,clip));
    const [w,h]=aspect==='9:16'?[720,1280]:aspect==='1:1'?[720,720]:[1280,720];
    // Fit-and-pad protects context. No unimplemented face tracking or misleading smart-crop claim.
-   const filter=`scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=0x111a23,setsar=1`+(burnCaptions?`,subtitles=${sub}:force_style='FontName=DejaVu Sans,FontSize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H00151B24,BorderStyle=1,Outline=2,Alignment=2,MarginV=40'`:'');
+   const filter=`scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=0x111a23,setsar=1`+(burnCaptions?`,subtitles=${sub}:force_style='FontName=DejaVu Sans,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H00151B24,BorderStyle=1,Outline=1.2,Alignment=2,MarginV=32'`:'');
    const input=join(this.store.dir,project.media.file),duration=clip.end-clip.start;
    const args=['-nostdin','-y','-v','error','-threads','2'];
-   if(project.media.video)args.push('-ss',String(clip.start),'-i',input,'-map','0:v:0','-map','0:a?');
-   else args.push('-f','lavfi','-i',`color=c=0x111a23:s=${w}x${h}:r=24`,'-ss',String(clip.start),'-i',input,'-map','0:v:0','-map','1:a:0');
-   args.push('-t',String(duration),'-vf',filter,'-c:v','libx264','-preset','veryfast','-crf','24','-threads','2','-c:a','aac','-b:a','128k','-pix_fmt','yuv420p','-movflags','+faststart',output);
+   if(project.media.video)args.push('-ss',String(clip.start),'-i',input,'-map','0:v:0','-map','0:a?','-vf',filter);
+   else {
+    const titleFile=`${job.id}.title.txt`;
+    await writeFile(join(dir,titleFile),wrapTitle(clip.title,w===1280?45:29));
+    const waveWidth=w-120,waveHeight=Math.round(h*.10),label=project.sample?'SYNTHETIC DEMO AUDIO':'PODCAST EXCERPT';
+    const brand=`drawtext=font='DejaVu Sans':text='SignalLoop.':expansion=none:fontcolor=0xdbff8b:fontsize=25:x=60:y=55`;
+    const labelFilter=`drawtext=font='DejaVu Sans':text='${label}':expansion=none:fontcolor=0xa6bbae:fontsize=13:x=60:y=${Math.round(h*.2)}`;
+    const title=`drawtext=font='DejaVu Sans':textfile=${titleFile}:expansion=none:fontcolor=white:fontsize=${w===1280?38:34}:line_spacing=13:x=60:y=${Math.round(h*.27)}`;
+    const subtitle=burnCaptions?`,subtitles=${sub}:force_style='FontName=DejaVu Sans,FontSize=11,PrimaryColour=&H00FFFFFF,OutlineColour=&H00151B24,BorderStyle=1,Outline=1.2,Alignment=2,MarginV=32'`:'';
+    const graph=`[1:a]asplit=2[audio][wave];[wave]showwaves=s=${waveWidth}x${waveHeight}:mode=line:rate=24:colors=0xdbff8b[waveform];[0:v]${brand},${labelFilter},${title}[base];[base][waveform]overlay=(W-w)/2:H*0.60:shortest=1${subtitle}[out]`;
+    args.push('-f','lavfi','-i',`color=c=0x1c302d:s=${w}x${h}:r=24`,'-ss',String(clip.start),'-i',input,'-filter_complex_threads','1','-filter_complex',graph,'-map','[out]','-map','[audio]');
+   }
+   args.push('-t',String(duration),'-c:v','libx264','-preset','veryfast','-crf','24','-threads','2','-c:a','aac','-b:a','128k','-pix_fmt','yuv420p','-movflags','+faststart',output);
    await run('ffmpeg',args,{cwd:dir,timeout:600000});
    this.store.log('clip.rendered',{clipId:clip.id,aspect,jobId:job.id});
-   return {file:`exports/${output}`,url:`/api/exports/${job.id}`,aspect,clipId:clip.id};
+   return {file:`exports/${output}`,url:`/api/exports/${job.id}`,aspect,clipId:clip.id,captionTiming:'segment-interpolated',style:project.media.video?'fit-and-pad':'waveform-audiogram'};
   });
  }
 }

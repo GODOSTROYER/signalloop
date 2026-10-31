@@ -49,7 +49,7 @@ export function classify(text) {
 export function candidates(project) {
   const segments = project.segments;
   const result = [];
-  for (let i = 0; i < segments.length && result.length < 50; i++) {
+  for (let i = 0; i < segments.length; i++) {
     const group = [segments[i]];
     while (group.at(-1).end - group[0].start < 14 && i + group.length < segments.length && segments[i + group.length].end - group[0].start <= 65) group.push(segments[i + group.length]);
     const start = group[0].start, end = group.at(-1).end;
@@ -68,7 +68,22 @@ export function candidates(project) {
     i += group.length - 1;
   }
   assert(result.length, 'No 6–95 second candidates found. Use shorter transcript segments.');
-  return result;
+  // Scan the entire episode before capping. Retain the best moment in each
+  // chronological bucket, then fill by content score. Late-episode material is
+  // no longer silently excluded, and a large source cannot flood the interface.
+  if (result.length <= 80) return result;
+  const coverage = new Map();
+  const total = project.duration || segments.at(-1).end;
+  for (const c of result) {
+    const bucket = Math.min(19, Math.floor(c.start / Math.max(1, total) * 20));
+    if (!coverage.has(bucket) || baseScore(c) > baseScore(coverage.get(bucket))) coverage.set(bucket, c);
+  }
+  const selected = new Map([...coverage.values()].map(c => [c.id, c]));
+  for (const c of [...result].sort((a,b) => baseScore(b)-baseScore(a) || a.start-b.start)) {
+    if (selected.size >= 80) break;
+    selected.set(c.id, c);
+  }
+  return [...selected.values()].sort((a,b) => a.start-b.start);
 }
 export function baseScore(c) { const f = c.features; return Math.round(f.hook*.35 + f.payoff*.3 + f.coherence*.25 + f.duration*.1); }
 export function rankClips(clips, feedback, platform, sample) {
@@ -102,6 +117,7 @@ export function validateFeedback(rows, knownClips, sample) {
     assert(counts.views>0, 'views must be positive.');
     for(const k of ['completions','saves','shares']) assert(counts[k]<=counts.views, `${k} cannot exceed views.`);
     assert(typeof r.observedAt==='string' && Number.isFinite(Date.parse(r.observedAt)), 'observedAt must be an ISO date.');
+    assert(Date.parse(r.observedAt) <= Date.now() + 300000, 'observedAt cannot be in the future.');
     return {id: `${sample?'sample':'real'}:${key}`, projectId:c.projectId, clipId:c.id, kind:c.kind, platform:r.platform, postId, ...counts, sample, observedAt:r.observedAt};
   });
 }
@@ -116,8 +132,21 @@ export function inferRules(before, after, platform, editId) {
   let pre=0; while(pre<before.length && pre<after.length && before[pre]===after[pre]) pre++;
   let suffix=0; while(suffix<before.length-pre && suffix<after.length-pre && before.at(-1-suffix)===after.at(-1-suffix)) suffix++;
   const removed=before.slice(pre,before.length-suffix).trim(), added=after.slice(pre,after.length-suffix).trim();
-  if(removed.length>=4 && removed.length<=60 && added.length>=2 && added.length<=60 && !removed.includes('\n') && !added.includes('\n')) add('replace',{from:removed,to:added},`Prefer “${added}” over “${removed}”.`);
+  if(removed.length>=4 && removed.length<=60 && added.length>=2 && added.length<=60 && !removed.includes('\n') && !added.includes('\n') && safeStyleReplacement(removed, added)) add('replace',{from:removed,to:added},`Prefer “${added}” over “${removed}”.`);
+  for(const [from,to] of [['utilize','use'],['leverage','use'],['commence','start'],['purchase','buy'],['individuals','people'],['in order to','to'],['approximately','about'],['a plethora of','many'],['game-changing','useful'],['revolutionary','useful']]) {
+    if(before.includes(from) && before.split(from).join(to)===after && !rules.some(r=>r.kind==='replace')) add('replace',{from,to},`Prefer “${to}” over “${from}”.`);
+  }
   return rules;
+}
+// Phrase changes may alter claims, not just voice. Facts are never promoted
+// into reusable memory. Keep the complete edit as an example for human review.
+export function safeStyleReplacement(from, to) {
+  const factual = /\d|[%$€£₹]|\b(?:not|never|no|cannot|can't|won't|always|guarantee|only|unless|except|may|might|could|million|billion|percent|increase|decrease|revenue|profit|users|customers)\b/iu;
+  if (factual.test(from) || factual.test(to)) return false;
+  // Only learn a narrow vocabulary of stylistic substitutions. Arbitrary names,
+  // factual entities and topic-specific edits must not leak into future sources.
+  const pairs = [['utilize','use'],['leverage','use'],['commence','start'],['purchase','buy'],['individuals','people'],['in order to','to'],['approximately','about'],['a plethora of','many'],['game-changing','useful'],['revolutionary','useful']];
+  return pairs.some(([a,b]) => from.toLowerCase()===a && to.toLowerCase()===b);
 }
 export function applyRules(copy, rules, platform) {
   let text=copy;
@@ -125,18 +154,25 @@ export function applyRules(copy, rules, platform) {
     if(r.kind==='no-emdash') text=text.replace(/\s*—\s*/g,'. ');
     if(r.kind==='no-hashtags') text=text.replace(/#[\p{L}\p{N}_]+/gu,'');
     if(r.kind==='no-emoji') text=text.replace(/\p{Extended_Pictographic}\uFE0F?/gu,'');
-    if(r.kind==='replace') text=text.split(r.value.from).join(r.value.to);
-    if(r.kind==='max-words') { const ws=text.split(/\s+/); if(ws.length>r.value) text=ws.slice(0,r.value).join(' ').replace(/[,:;]$/,'')+'…'; }
+    if(r.kind==='replace' && safeStyleReplacement(r.value.from, r.value.to)) { const escaped=r.value.from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); text=text.replace(new RegExp('(?<![\\p{L}\\p{N}])'+escaped+'(?![\\p{L}\\p{N}])','giu'),r.value.to); }
+    if(r.kind==='max-words') {
+      const parts=text.match(/[^.!?]+[.!?]+(?:[”’"']|$)?|[^.!?]+$/gu)||[text];
+      let kept='';
+      for(const part of parts) { if(words(kept+' '+part).length>r.value) break; kept+=part; }
+      // Keep a complete first sentence rather than cut a qualification mid-way.
+      if(kept.trim()) text=kept.trim();
+    }
   }
   return text.replace(/ +\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
 }
 export function draftCopy(clip, platform, rules) {
   assert(platforms.includes(platform),'Unknown platform.');
   const first=sentence(clip.text), rest=clip.text.slice(first.length).trim();
+  const bounded=(value,limit)=>{let out='';for(const part of value.match(/[^.!?]+[.!?]?/gu)||[]){if((out+part).length>limit)break;out+=part;}return out.trim();};
   let text;
-  if(platform==='linkedin') text=`${first}\n\n${rest.slice(0,650)}\n\nWhat has worked in your experience?`;
-  else if(platform==='youtube') text=`${first.slice(0,100)}\n\n${rest.slice(0,260)}\n\nFull conversation in the source episode. #Shorts`;
-  else text=`${first}\n\n${rest.slice(0,240)}\n\nSave this for your next content session. #CreatorWorkflow`;
+  if(platform==='linkedin') text=`${first}\n\n${bounded(rest,650)}\n\nWhat has worked in your experience?`;
+  else if(platform==='youtube') text=`${first}\n\n${bounded(rest,260)}\n\nFull conversation in the source episode. #Shorts`;
+  else text=`${first}\n\n${bounded(rest,240)}\n\nSave this for your next content session. #CreatorWorkflow`;
   return {text:applyRules(text,rules,platform),engine:'extractive-template',rulesUsed:rules.filter(r=>r.active&&(r.platform===platform||r.platform==='all')).map(r=>r.id)};
 }
 export function captions(project, clip, format='srt') {
