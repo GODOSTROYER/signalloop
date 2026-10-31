@@ -8,6 +8,12 @@ The interesting part is the loop, not another clipping button:
 
 **Source → explained moments → platform copy → creator edits → approved brand rules → outcome evidence → a different next recommendation.**
 
+## Watch the showcase (1:44)
+
+[![SignalLoop showcase video](docs/media/showcase-poster.jpg)](https://github.com/GODOSTROYER/signalloop/raw/main/docs/media/signalloop-showcase.mp4)
+
+▶ [Play the showcase video](docs/media/signalloop-showcase.mp4)
+
 ## v0.2: learning you can inspect
 
 - **Learning lab:** compare the same source with and without approved memory. The aggregate excludes edited clips and reports measured rule violations, not fabricated audience lift.
