@@ -1,20 +1,140 @@
+<div align="center">
+
+<img src="public/mark.svg" width="88" alt="SignalLoop logo">
+
 # SignalLoop
 
-**Keep the idea. Lose the busywork.**
+### Keep the idea. Lose the busywork.
 
-A working, local-first content repurposing prototype for The Product Space's **Media: content repurposing studio with brand memory** problem statement.
+**The content studio that can show what it learned.**<br>
+Turn one long conversation into a reviewable campaign: explained clips, platform copy that learns your voice from your own edits, a source guard that protects what the speaker actually said, and outcomes that nudge the next cut.
 
-The interesting part is the loop, not another clipping button:
+![Node](https://img.shields.io/badge/Node-22.16%2B-2B6653?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Zero deps](https://img.shields.io/badge/npm%20dependencies-0-DBFF8B?style=for-the-badge&labelColor=182827)
+![Tests](https://img.shields.io/badge/tests-75%20passing-DBFF8B?style=for-the-badge&labelColor=182827)
+![Local first](https://img.shields.io/badge/local--first-SQLite%20%C2%B7%20FFmpeg%20%C2%B7%20Whisper-182827?style=for-the-badge)
+![Gemini](https://img.shields.io/badge/Gemini-optional%20%26%20validated-182827?style=for-the-badge&logo=googlegemini&logoColor=DBFF8B)
 
-**Source → explained moments → platform copy → creator edits → approved brand rules → outcome evidence → a different next recommendation.**
+<a href="https://github.com/GODOSTROYER/signalloop/raw/main/docs/media/signalloop-showcase.mp4"><img src="docs/media/hero.gif" width="860" alt="SignalLoop cold open: the busywork loop collapses into the SignalLoop logo"></a>
 
-## Watch the showcase (1:44)
+### ▶ [Watch the 1:44 showcase film](https://github.com/GODOSTROYER/signalloop/raw/main/docs/media/signalloop-showcase.mp4)
 
-[![SignalLoop showcase video](docs/media/showcase-poster.jpg)](https://github.com/GODOSTROYER/signalloop/raw/main/docs/media/signalloop-showcase.mp4)
+<a href="https://github.com/GODOSTROYER/signalloop/raw/main/docs/media/signalloop-showcase.mp4"><img src="docs/media/showcase-poster.jpg" width="520" alt="Play the SignalLoop showcase video"></a>
 
-▶ [Play the showcase video](docs/media/signalloop-showcase.mp4)
+</div>
 
-## v0.2: learning you can inspect
+---
+
+## ⚡ 30-second pitch
+
+> Creators don't lose time generating clips. They lose it **fixing the same caption mistakes, again and again**, and double-checking that an edit didn't change what the speaker meant.
+
+SignalLoop closes that loop:
+
+<div align="center">
+
+**Source → explained moments → platform copy → *your edits* → approved brand rules → outcome evidence → a smarter next cut**
+
+<img src="docs/media/film/loop.jpg" width="760" alt="The SignalLoop loop">
+
+</div>
+
+| | What judges can see working | Why it matters |
+| --- | --- | --- |
+| 🧠 | **Brand memory from ordinary edits**: delete a hashtag once, approve the proposed rule, and it applies to clips it was never taught | Learning you can inspect, scope and switch off |
+| 🔬 | **Memory proof**: same moment, same engine, with vs. without your memory, **rule violations 7 → 0** on held-out moments | Evidence of learning, not a claim of it |
+| 🛡️ | **Source Guard** blocks invented numbers and certainty ("99999 subscribers. Guaranteed.") before they ship | Edits can't quietly change the meaning |
+| 🎯 | **Explainable selection**: hook · payoff · coherence · duration, the exact quote, context warnings | Not a black-box "virality score" |
+| 📅 | **Campaign planner**: non-overlapping moments, human approval gate, calendar + ICS, real captioned MP4s (9:16 / 1:1 / 16:9) | From one episode to scheduled posts |
+| 📈 | **Outcome loop**: imported results re-rank the shortlist by a **visible, capped ±12** adjustment | Data informs, never takes over |
+| 🏗️ | **Zero-dependency Node + SQLite + FFmpeg + local Whisper**; Gemini optional and validated server-side | Runs on a laptop; AI is a choice, not a dependency |
+
+---
+
+## 🖼️ The product, in screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/screens/01-studio-overview.jpg" alt="Studio"><br><b>Studio</b>: every suggested moment comes with its reasons, four visible scores, the exact quote and context checks.</td>
+<td width="50%"><img src="docs/media/screens/04-memory-rule-proposed.jpg" alt="Brand memory"><br><b>Brand memory</b>: one edit becomes a proposed, evidence-linked rule, scoped to Instagram, waiting for approval.</td>
+</tr>
+<tr>
+<td><img src="docs/media/screens/06-lab-memory-proof.jpg" alt="Memory proof"><br><b>Learning lab · memory proof</b>: held-out moments, with vs. without memory, <b>7 → 0</b> rule violations.</td>
+<td><img src="docs/media/screens/11-source-guard-blocked-flags.jpg" alt="Source guard"><br><b>Source guard</b>: invented "99999" and "guaranteed" are blocked against the real transcript context.</td>
+</tr>
+<tr>
+<td><img src="docs/media/screens/14-campaign-built-trace.jpg" alt="Campaign planner"><br><b>Campaign planner</b>: a visible pipeline trace and three non-overlapping, review-gated moments.</td>
+<td><img src="docs/media/screens/22-performance-illustrative-results.jpg" alt="Performance loop"><br><b>Performance loop</b>: results nudge rankings by at most ±12 points; demo data is clearly labelled synthetic.</td>
+</tr>
+<tr>
+<td><img src="docs/media/screens/20-calendar-planned-posts.jpg" alt="Calendar"><br><b>Content calendar</b>: approved posts only, copy snapshots, ICS export. No surprise auto-publishing.</td>
+<td><img src="docs/media/screens/27-lab-demo-readiness.jpg" alt="Demo readiness"><br><b>Demo readiness</b>: an artifact-based checklist covering real media, learned memory, feedback and real MP4 exports.</td>
+</tr>
+</table>
+
+<p align="center"><img src="docs/media/screens/mobile.jpg" width="240" alt="Mobile"><br><sub>Responsive down to phone width.</sub></p>
+
+---
+
+## 🎬 From the film
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/film/edit.jpg" alt="Edit"><br><sub>Your edit is the training signal.</sub></td>
+<td width="50%"><img src="docs/media/film/proof.jpg" alt="Proof"><br><sub>The diff, made visual: removed by your rule.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/media/film/guard.jpg" alt="Guard"><br><sub>Blocked before publishing.</sub></td>
+<td><img src="docs/media/film/campaign.jpg" alt="Campaign"><br><sub>One episode, one reviewable campaign, real exports.</sub></td>
+</tr>
+</table>
+
+## 🏗️ Architecture
+
+<p align="center"><img src="docs/media/film/architecture.jpg" width="860" alt="SignalLoop architecture"></p>
+
+- **Browser** (`public/`): native JS, no build step, no CDN.
+- **Node HTTP server** (`server/index.mjs`): API, streaming uploads, sessions. **0 npm dependencies.**
+- **Transparent modules**: `domain.mjs` (scoring, rules, captions) · `editorial.mjs` (source guard) · `lab.mjs` (memory proof, campaigns).
+- **Storage**: `db.mjs` on Node's built-in `node:sqlite` (WAL), all data in local `.signalloop/`.
+- **Media**: `media.mjs` job queue → FFmpeg + optional local faster-whisper.
+- **AI (optional)**: `ai.mjs` → Gemini structured JSON, behind a server-side gate that rejects unknown clip IDs and invented quotes.
+
+## 🚀 Run it in 30 seconds
+
+```bash
+git clone https://github.com/GODOSTROYER/signalloop.git
+cd signalloop
+npm start
+# Open http://127.0.0.1:3000 (no API key, no npm install)
+```
+
+Then follow the judge path: **edit Instagram copy → Brand memory → approve → Learning lab → Source guard → Campaign planner → Performance loop** (full script in [docs/DEMO.md](docs/DEMO.md)).
+
+## 🧾 Judge's map
+
+| Problem-statement requirement | Where to see it | Evidence |
+| --- | --- | --- |
+| Long video/podcast ingestion | New source · upload + transcript | Streamed upload, ffprobe validation, playback |
+| Clip selection with reasons | Studio shortlist | Score components, source quote, context warning |
+| Platform captions & copy | Studio copy tabs · Export | Distinct IG / YouTube / LinkedIn drafts, real MP4 + SRT/VTT |
+| Brand memory from edits | Brand memory · Learning lab | Edit pairs, approved scoped rules, held-out 7 → 0 |
+| Content calendar | Campaign planner · Calendar | Approved-only planning, ICS export |
+| Feedback changes suggestions | Performance loop | Visible, capped deltas; synthetic data isolated |
+
+**Honest by design:** scoring is a transparent heuristic, not a trained virality model; Source Guard is a lexical risk screen, not a fact checker; nothing auto-publishes; demo analytics are labelled synthetic. Details below.
+
+<sub>The showcase film was made with HyperFrames, a Gemini TTS voiceover and an original Lyria soundtrack, using real screenshots of this app.</sub>
+
+---
+
+## 📚 Deep dive
+
+<details open>
+<summary><b>Everything in detail: features, setup, AI, tests, architecture, deployment, roadmap</b></summary>
+
+
+### v0.2: learning you can inspect
 
 - **Learning lab:** compare the same source with and without approved memory. The aggregate excludes edited clips and reports measured rule violations, not fabricated audience lift.
 - **Source guard:** surrounding transcript context, unsupported-number/certainty blocks and missing-qualification warnings. A lexical risk screen, not a complete fact checker.
@@ -27,7 +147,7 @@ The interesting part is the loop, not another clipping button:
 
 See [submission checklist](docs/SUBMISSION.md) and [three-minute walkthrough](docs/DEMO.md).
 
-## Run it
+### Run it
 
 Requires **Node.js 22.16+** (Node 24 recommended). The web app has **zero npm dependencies** and no frontend build step.
 
@@ -68,7 +188,7 @@ For your own material, choose **New source**, upload your video/podcast and atta
 
 Plain text is supported for transcript exploration but is marked **estimated** and cannot be rendered. The app never fabricates a transcript when ASR is unavailable.
 
-## Implemented
+### Implemented
 
 | Requirement | This build |
 | --- | --- |
@@ -81,7 +201,7 @@ Plain text is supported for transcript exploration but is marked **estimated** a
 
 **Important boundaries:** clip scoring is currently a transparent heuristic, not a trained virality predictor. Offline copy is extractive/template-based, not secretly an LLM. The calendar does not auto-publish. Analytics are imported, not fetched from social networks. Reframing is fit-and-pad, not face tracking. There is one real creator brand plus an isolated demo brand, not a multi-tenant account system. Original SRT/VTT downloads retain source segment timing; burned phrases interpolate within those segments. Neither is forced word alignment.
 
-## Optional AI copy and semantic curation
+### Optional AI copy and semantic curation
 
 Copy `.env.example` to `.env`, configure `GEMINI_API_KEY` and a model available to your project in `GEMINI_MODEL`, and restart. Choose a model currently available to your Google project; live model availability was not verified in this environment.
 
@@ -95,7 +215,7 @@ Campaign planning also offers a consent-gated semantic review of up to 32 candid
 
 A live provider call was **not verified** in the build environment because no provider credential was supplied.
 
-## Optional local transcription
+### Optional local transcription
 
 ```bash
 python3 -m venv .venv
@@ -109,7 +229,7 @@ Upload media without a transcript, then choose **Transcribe**. `faster-whisper` 
 
 Local ASR execution was **not verified** here because the optional package and model were unavailable. Timed-transcript import and actual FFmpeg rendering were verified.
 
-## Demonstrate the differentiator
+### Demonstrate the differentiator
 
 1. Generate Instagram copy. Remove its hashtag and save the edit.
 2. Open **Brand memory** and approve the proposed no-hashtag preference.
@@ -118,7 +238,7 @@ Local ASR execution was **not verified** here because the optional package and m
 5. Clear the fixture. Content-only rankings return. Synthetic observations cannot influence the real brand.
 6. Plan a post and export a real captioned MP4. See `docs/DEMO.md` for a three-minute walkthrough.
 
-## Tests
+### Tests
 
 ```bash
 npm run check
@@ -131,7 +251,7 @@ A real browser smoke workflow is included in GitHub Actions: it exercises edit �
 
 Build-environment browser note: direct Chromium navigation to localhost was blocked by the execution environment (`ERR_BLOCKED_BY_ADMINISTRATOR`). Desktop/mobile views were rendered offline using the actual view modules and API state. Do not confuse that with a completed live browser end-to-end run. AI rewriting and local Whisper still require live verification.
 
-## Architecture and persistence
+### Architecture and persistence
 
 - `public/`: modular native JavaScript, semantic HTML, responsive CSS. No external CDN, remote font or build dependency.
 - `server/domain.mjs`: deterministic scoring, transcript parsing, rules, captions, feedback and calendar logic.
@@ -145,7 +265,7 @@ Build-environment browser note: direct Chromium navigation to localhost was bloc
 
 Native SQLite may emit an experimental warning on Node 22. The prototype uses APIs available in 22.16. See https://nodejs.org/api/sqlite.html.
 
-## Deployment and privacy
+### Deployment and privacy
 
 No hosted service is provisioned by this repository. Start locally, or use the included Dockerfile on a persistent host. **This is not a serverless Vercel function deployment:** it needs a writable volume and long-running FFmpeg jobs.
 
@@ -161,7 +281,7 @@ A non-loopback bind requires an access token of at least 24 characters. The serv
 
 This is still a single-user prototype: add real identity, resource quotas, worker/container isolation, authenticated tenancy, durable distributed jobs, backup/retention controls and an independent security review before handling other creators' private media. Never commit `.env`, uploaded footage or `.signalloop`.
 
-## Next implementation priorities
+### Next implementation priorities
 
 1. Verify ASR and the AI adapter against actual credentials/media, then evaluate semantic curation on real creator recordings and multilingual material.
 2. Add editable segment boundaries, forced word alignment and face-aware reframing with human review.
@@ -169,3 +289,5 @@ This is still a single-user prototype: add real identity, resource quotas, worke
 4. Replace heuristic performance updates with evaluated creator-specific models when enough comparable observations exist.
 
 A functioning prototype is evidence of implementation, not evidence of winning the hackathon or achieving content-performance lift.
+
+</details>
