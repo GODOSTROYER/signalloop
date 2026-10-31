@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='signalloop-browser-') as directory:
             raise RuntimeError('Server did not become healthy')
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={'width': 1440, 'height': 1050})
+            page = browser.new_page(viewport={'width': 1440, 'height': 1050}, reduced_motion='reduce')
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
             page.on('dialog', lambda dialog: dialog.accept())
@@ -42,16 +42,16 @@ with tempfile.TemporaryDirectory(prefix='signalloop-browser-') as directory:
             editor.fill(editor.input_value().replace('#CreatorWorkflow', '').strip())
             page.locator('[data-action="save-edit"]').click()
             expect(page.locator('#toast')).to_contain_text('Edit saved')
-            page.locator('[data-action="page"][data-value="memory"]').click()
+            page.locator('.nav-item[data-action="page"][data-value="memory"]').click()
             page.locator('.rule').filter(has_text='Leave hashtags out').get_by_role('button', name='Approve rule').click()
             expect(page.locator('.rule').filter(has_text='Leave hashtags out').get_by_role('button', name='Disable rule')).to_be_visible()
-            page.locator('[data-action="page"][data-value="lab"]').click()
+            page.locator('.nav-item[data-action="page"][data-value="lab"]').click()
             expect(page.locator('.proof-comparison')).to_be_visible()
             options = page.locator('#lab-clip-select option').evaluate_all('(nodes) => nodes.map(n => n.value)')
             page.locator('#lab-clip-select').select_option(options[1])
             expect(page.locator('.proof-comparison article').first.locator('p')).to_contain_text('#CreatorWorkflow')
             expect(page.locator('.proof-comparison .learned p')).not_to_contain_text('#CreatorWorkflow')
-            page.screenshot(path=str(ARTIFACTS / 'memory-proof.png'), full_page=True)
+            page.screenshot(path=str(ARTIFACTS / 'memory-proof.png'), full_page=True, animations='disabled')
 
             page.locator('[data-action="lab-tab"][data-value="campaign"]').click()
             page.locator('[data-action="lab-build"]').click()
@@ -63,21 +63,21 @@ with tempfile.TemporaryDirectory(prefix='signalloop-browser-') as directory:
             page.locator('[data-action="lab-schedule"]').click()
             page.locator('#campaign-schedule-form button[type="submit"]').click()
             expect(page.locator('.campaign-review').first).to_contain_text('Planned')
-            page.screenshot(path=str(ARTIFACTS / 'campaign.png'), full_page=True)
+            page.screenshot(path=str(ARTIFACTS / 'campaign.png'), full_page=True, animations='disabled')
 
             page.locator('[data-action="lab-tab"][data-value="guard"]').click()
             page.locator('[data-action="lab-inspect"]').click()
             page.locator('#meaning-form textarea').fill('We got 99999 new subscribers. Guaranteed.')
             page.locator('#meaning-form button[type="submit"]').click()
             expect(page.locator('.guard-flag.blocked')).to_have_count(2)
-            page.screenshot(path=str(ARTIFACTS / 'source-guard.png'), full_page=True)
+            page.screenshot(path=str(ARTIFACTS / 'source-guard.png'), full_page=True, animations='disabled')
 
-            page.locator('[data-action="page"][data-value="performance"]').click()
+            page.locator('.nav-item[data-action="page"][data-value="performance"]').click()
             page.locator('[data-action="demo-feedback"]').click()
             expect(page.locator('#toast')).to_contain_text('Illustrative results loaded')
             expect(page.locator('.rank-table .positive').first).to_be_visible()
 
-            page.locator('[data-action="page"][data-value="studio"]').click()
+            page.locator('.nav-item[data-action="page"][data-value="studio"]').click()
             page.locator('[data-action="export"]').click()
             page.locator('#export-form button[type="submit"]').click()
             download = page.locator('.job a').first
@@ -85,12 +85,12 @@ with tempfile.TemporaryDirectory(prefix='signalloop-browser-') as directory:
             with urllib.request.urlopen(base + download.get_attribute('href')) as response:
                 assert b'ftyp' in response.read(40), 'Export did not contain an MP4 header'
 
-            page.locator('[data-action="page"][data-value="lab"]').click()
+            page.locator('.nav-item[data-action="page"][data-value="lab"]').click()
             page.locator('[data-action="lab-tab"][data-value="proof"]').click()
             page.set_viewport_size({'width':390, 'height':844})
             expect(page.locator('.proof-comparison .learned')).to_be_visible()
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'), 'Mobile content overflowed'
-            page.screenshot(path=str(ARTIFACTS / 'mobile.png'), full_page=True)
+            page.screenshot(path=str(ARTIFACTS / 'mobile.png'), full_page=True, animations='disabled')
             assert not errors, f'Browser errors: {errors}'
             print('PASS: source load -> edit -> approved memory -> held-out comparison -> campaign -> review -> calendar -> source guard -> feedback -> actual MP4 -> mobile')
             browser.close()
