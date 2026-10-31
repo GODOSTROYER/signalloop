@@ -1,0 +1,6 @@
+{
+  "name": "signalloop", "version": "0.1.0", "private": true, "type": "module",
+  "description": "A content studio that remembers creator edits and adapts to measured outcomes.",
+  "engines": {"node": ">=22.16.0"},
+  "scripts": {"start": "node --env-file-if-exists=.env server/index.mjs", "dev": "node --watch --env-file-if-exists=.env server/index.mjs", "test": "node --test tests/*.test.mjs", "check": "node scripts/check.mjs", "demo:media": "node --env-file-if-exists=.env scripts/demo-media.mjs"}
+}

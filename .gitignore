@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+.signalloop/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+test-results/
+.DS_Store
